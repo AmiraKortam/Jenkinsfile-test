@@ -1,12 +1,16 @@
 pipeline {
     agent any
     environment {
-        WORKSPACE = "/var/jenkins_home/workspace/Jenkins-NTI"
+        WORKSPACE = "/var/jenkins_home/workspace/docker-hub"
+        IMAGE_NAME = "amiramohammed/test-jenkins"
+        IMAGE_TAG = "latest"
+        DOCKER_HUB_CREDENTIALS = "docker-hub-credentials"
     }
     stages {
         stage('Checkout') {
             steps {
                 script {
+                    echo "Checking workspace directory..."
                     sh 'pwd'
                     sh 'ls -l'
                     sh 'git rev-parse --is-inside-work-tree || echo "Not a git repository!"'
@@ -16,15 +20,17 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    docker.build('image1', '.')
+                    echo "Building Docker image..."
+                    def myImage = docker.build("${IMAGE_NAME}:${IMAGE_TAG}", ".")
                 }
             }
         }
         stage('Push Docker Image') {
             steps {
                 script {
-                    docker.withRegistry('https://hub.docker.com/repository/docker/amiramohammed/test-jenkins/general', 'docker-hub-credentials') {
-                        docker.image('image1').push('latest')
+                    echo "Pushing Docker image to Docker Hub..."
+                    docker.withRegistry('https://index.docker.io/v1/', DOCKER_HUB_CREDENTIALS) {
+                        docker.image("${IMAGE_NAME}:${IMAGE_TAG}").push()
                     }
                 }
             }
